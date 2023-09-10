@@ -4,10 +4,12 @@ const express = require('express')
 const { engine } = require('express-handlebars')
 const app = express()
 const port = 3000
-const { apis, pages } = require('./routes')
 const flash = require('connect-flash')
 const session = require('express-session')
+
 const messageHandler = require('./middleware/message-handler')
+const loginUserHandler = require('./middleware/login-user-handler')
+const { apis, pages } = require('./routes')
 
 app.engine('.hbs', engine({ extname: '.hbs' }))
 app.set('view engine', '.hbs')
@@ -22,9 +24,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }))
+
 app.use(flash())
 
 app.use(messageHandler)
+app.use(loginUserHandler)
 
 app.use('/api', apis)
 app.use(pages)
