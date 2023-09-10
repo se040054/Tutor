@@ -4,7 +4,7 @@ const userController = {
   register: (req, res) => {
     userService.register(req, (err, data) => {
       if (err) {
-        return res.status(400).json({ status: 'fail', error: err.message })
+        return res.status(400).json({ status: 'error', message: err.message })
       } else {
         return res.json({ data })
       }
