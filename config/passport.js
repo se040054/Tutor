@@ -42,13 +42,35 @@ passport.use(new LocalStrategy(
   }
 ))
 
-// passport.serializeUser((user, cb) => {
-//   cb(null, user.id)
-// })
-// passport.deserializeUser((id, cb) => {
-//   return User.findByPk(id)
-//     .then(user => cb(null, user.toJSON()))
-//     .catch(err => cb(err))
-// })
+const GoogleStrategy = require('passport-google-oauth20').Strategy
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: process.env.GOOGLE_CALLBACK_URL,
+  scope: ['email', 'profile'],
+  state: false // API是無狀態，沒session，不用特別設置，但要記得false
+},
+(accessToken, refreshToken, profile, cb) => {
+  const userProfile = profile._json
+  return User.findOne(
+    { where: { email: userProfile.email } }
+  )
+    .then(user => {
+      if (user) return cb(null, user)
+      if (!user) {
+        return User.create({
+          email: userProfile.email,
+          name: userProfile.name,
+          password: bcrypt.hashSync(Math.random().toString(36).slice(2), 10),
+          isTeacher: false,
+          isAdmin: false,
+          learningHour: 0
+        })
+          .then(createdUser => cb(null, createdUser))
+      }
+    })
+    .catch(err => cb(err))
+}))
 
 module.exports = passport

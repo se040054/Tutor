@@ -13,9 +13,11 @@ app.use(express.json())
 app.use('/api', apis)
 
 app.get('/', (req, res) => {
-  res.render('dev/dev_home')
+  res.send('dev/dev_home')
 })
 
 app.listen(port, () => {
   console.info(`http://localhost:${port}`)
+  console.log(`for api http://localhost:${port}/api `)
+  console.log(`for auth http://localhost:${port}/api/auth/google `)
 })
