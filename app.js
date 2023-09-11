@@ -1,11 +1,10 @@
-require('dotenv').config()
-
+require('dotenv').config({ path: './environment/dev/.env' })
 const express = require('express')
 
 const app = express()
 const port = process.env.PORT
 
-const { apis } = require('./routes')
+const apis = require('./src/routes/index')
 
 app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }))

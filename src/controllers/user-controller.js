@@ -1,5 +1,6 @@
-const userService = require('../../services/user-service')
+const userService = require('../services/user-service')
 const jwt = require('jsonwebtoken')
+
 const userController = {
   register: (req, res) => {
     userService.register(req, (err, data) => {
