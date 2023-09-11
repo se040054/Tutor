@@ -4,7 +4,8 @@
     "password": "1234",
     "database": "tutor",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "migrationsPath": "/src/db/migrations"
   },
   "test": {
     "username": "root",
