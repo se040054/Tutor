@@ -4,6 +4,8 @@ const passport = require('../../config/passport')
 // const authenticated = passport.authenticate('jwt', { session: false })
 // 其實 authenticate第三參數可以接受cb函式 但是要自己處理驗證成功時 req.user 給資料
 
+const { Teacher } = require('../db/models')
+
 const authenticated = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user) => { // (err, user) 是cb函式
     if (err || !user) return res.status(403).json({ status: 'error', message: '未授權' })
@@ -14,9 +16,26 @@ const authenticated = (req, res, next) => {
 
 const authenticatedAdmin = (req, res, next) => {
   if (req.user && req.user.isAdmin) return next()
-  return res.status(403).res.json({ status: 'error', message: '未授權' })
+  return res.status(403).json({ status: 'error', message: '未授權' })
 }
+
+const authenticatedTeacher = (req, res, next) => {
+  if (req.user && req.user.isTeacher) {
+    return Teacher.findOne({
+      where: { userId: req.user.id },
+      raw: true
+    })
+      .then(teacher => {
+        req.user.teacherId = teacher.id
+        return next()
+      })
+      .catch(err => next(err))
+  }
+  return res.status(403).json({ status: 'error', message: '使用者並非為教師' })
+}
+
 module.exports = {
   authenticated,
-  authenticatedAdmin
+  authenticatedAdmin,
+  authenticatedTeacher
 }

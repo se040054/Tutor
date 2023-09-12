@@ -17,7 +17,10 @@ const userService = {
         })
       })
       .then(user => {
-        next(null, { user: user.toJSON() })
+        return next(null, {
+          status: 'success',
+          user
+        })
       })
       .catch(err => next(err))
   },
@@ -42,7 +45,6 @@ const userService = {
           })
         })
       }).catch(err => {
-        console.log(err)
         return next(err)
       })
   }
