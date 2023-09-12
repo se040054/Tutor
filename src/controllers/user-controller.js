@@ -26,6 +26,15 @@ const userController = {
     } catch (err) {
       return next(err)
     }
+  },
+  applyTeacher: (req, res) => {
+    userService.applyTeacher(req, (err, data) => {
+      if (err) {
+        return res.status(400).json({ status: 'error', message: err.message })
+      } else {
+        return res.json({ data })
+      }
+    })
   }
 }
 

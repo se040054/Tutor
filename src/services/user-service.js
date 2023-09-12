@@ -1,4 +1,4 @@
-const { User } = require('../db/models')
+const { User, Teacher } = require('../db/models')
 const bcrypt = require('bcryptjs')
 const userService = {
   register: (req, next) => {
@@ -20,6 +20,31 @@ const userService = {
         next(null, { user: user.toJSON() })
       })
       .catch(err => next(err))
+  },
+  applyTeacher: (req, next) => {
+    const { courseIntroduce, courseUrl, teachStyle } = req.body
+    if (!courseIntroduce || !courseUrl || !teachStyle) throw new Error('有資料未填寫')
+    return User.findByPk(req.user.id)
+      .then(user => {
+        if (user.isTeacher) throw new Error('用戶已經是老師身分')
+        return user.update({ isTeacher: true })
+      }).then(updatedUser => {
+        return Teacher.create({
+          courseIntroduce,
+          courseUrl,
+          teachStyle,
+          userId: String(updatedUser.id)
+        }).then(createdTeacher => {
+          return next(null, {
+            status: 'success',
+            user: updatedUser,
+            teacher: createdTeacher
+          })
+        })
+      }).catch(err => {
+        console.log(err)
+        return next(err)
+      })
   }
 }
 
