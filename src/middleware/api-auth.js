@@ -4,11 +4,12 @@ const passport = require('../../config/passport')
 // const authenticated = passport.authenticate('jwt', { session: false })
 // 其實 authenticate第三參數可以接受cb函式 但是要自己處理驗證成功時 req.user 給資料
 
-const { Teacher } = require('../db/models')
+const { Teacher, Lesson, User } = require('../db/models')
 
 const authenticated = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user) => { // (err, user) 是cb函式
     if (err || !user) return res.status(403).json({ status: 'error', message: '未授權' })
+    delete user.password
     req.user = user // 被cb覆蓋掉了 記得寫回來 否則登入不會有req.user
     next()
   })(req, res, next)
@@ -21,12 +22,18 @@ const authenticatedAdmin = (req, res, next) => {
 
 const authenticatedTeacher = (req, res, next) => {
   if (req.user && req.user.isTeacher) {
-    return Teacher.findOne({
-      where: { userId: req.user.id },
+    return User.findByPk(req.user.id, {
+      include: [
+        {
+          model: Teacher
+        }
+      ],
+      nest: true,
       raw: true
     })
-      .then(teacher => {
-        req.user.teacherId = teacher.id
+      .then(user => {
+        delete user.password
+        req.user = user
         return next()
       })
       .catch(err => next(err))

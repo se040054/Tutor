@@ -5,4 +5,6 @@ const teacherController = require('../controllers/teacher-controller')
 
 router.post('/teachers/addLesson', authenticated, authenticatedTeacher, teacherController.addLesson)
 
+router.get('/teachers/me', authenticated, authenticatedTeacher, teacherController.showMe)
+
 module.exports = router

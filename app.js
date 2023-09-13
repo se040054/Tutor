@@ -1,4 +1,5 @@
 require('dotenv').config({ path: './environment/dev/.env' })
+
 const express = require('express')
 
 const app = express()
