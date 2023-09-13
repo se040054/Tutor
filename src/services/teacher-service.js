@@ -1,6 +1,6 @@
 const { Lesson, Teacher } = require('../db/models')
-const moment = require('moment-timezone')
-moment.tz.setDefault('Asia/Taipei')
+const moment = require('moment')
+require('moment-timezone').tz.setDefault('Asia/Taipei')
 
 const teacherService = {
   addLesson: (req, next) => {
