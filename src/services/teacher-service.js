@@ -1,4 +1,4 @@
-const { Lesson, Teacher } = require('../db/models')
+const { Lesson, Teacher, User } = require('../db/models')
 const moment = require('moment')
 require('moment-timezone').tz.setDefault('Asia/Taipei')
 
@@ -68,18 +68,33 @@ const teacherService = {
   },
   getAllTeachers: async (req, next) => {
     let currentPage = req.query.page || 1
-    // let search = req.query.search || null
-    const teachersAmount = await Teacher.count()
+    const search = req.query.search || null
+    const teachersAmount =
+      search
+        ? await Teacher.count(
+          {
+            include: [{
+              model: User,
+              where: { name: search }
+            }]
+          })
+        : await Teacher.count()
     const TEACHERS_PER_PAGE = 6
     const totalPage = Math.ceil(teachersAmount / TEACHERS_PER_PAGE)
     if (currentPage > totalPage) currentPage = totalPage
     if (currentPage < 1) currentPage = 1
     const offset = (currentPage - 1) * TEACHERS_PER_PAGE
     return Teacher.findAll(
-      { offset, limit: TEACHERS_PER_PAGE }
+      {
+        include: [{
+          model: User,
+          where: search ? { name: search } : null
+        }],
+        offset,
+        limit: TEACHERS_PER_PAGE
+      }
     )
       .then(onePageTeachers => {
-        console.log(currentPage)
         return next(null, {
           status: 'success',
           teachers: onePageTeachers
