@@ -66,38 +66,77 @@ const teacherService = {
       })
       .catch(err => next(err))
   },
-  getAllTeachers: async (req, next) => {
+  getTeachers: async (req, next) => {
     let currentPage = req.query.page || 1
     const search = req.query.search || null
     const teachersAmount =
       search
-        ? await Teacher.count(
-          {
-            include: [{
-              model: User,
-              where: { name: search }
-            }]
-          })
+        ? await Teacher.count({
+          include: [{
+            model: User,
+            where: { name: search }
+          }]
+        })
         : await Teacher.count()
     const TEACHERS_PER_PAGE = 6
     const totalPage = Math.ceil(teachersAmount / TEACHERS_PER_PAGE)
     if (currentPage > totalPage) currentPage = totalPage
     if (currentPage < 1) currentPage = 1
     const offset = (currentPage - 1) * TEACHERS_PER_PAGE
-    return Teacher.findAll(
-      {
-        include: [{
-          model: User,
-          where: search ? { name: search } : null
-        }],
-        offset,
-        limit: TEACHERS_PER_PAGE
-      }
-    )
+    return Teacher.findAll({
+      include: [{
+        model: User,
+        attributes: { exclude: ['password'] },
+        where: search ? { name: search } : null
+      }],
+      offset,
+      limit: TEACHERS_PER_PAGE
+    })
       .then(onePageTeachers => {
+        if (onePageTeachers.length < 1) throw new Error('查無搜尋結果')
         return next(null, {
           status: 'success',
           teachers: onePageTeachers
+        })
+      })
+      .catch(err => next(err))
+  },
+  getTeacher: (req, next) => {
+    const id = req.params.id
+    return Teacher.findByPk(id, {
+      include: [
+        {
+          model: User,
+          attributes: { exclude: ['password'] }
+        },
+        { model: Lesson }
+      ]
+    })
+      .then(teacher => {
+        if (!teacher) throw new Error('找不到此教師')
+        return next(null, {
+          status: 'success',
+          teacher
+        })
+      })
+      .catch(err => next(err))
+  },
+  putTeacher: (req, next) => {
+    const { courseIntroduce, courseUrl, teachStyle } = req.body
+    if (!courseIntroduce || !courseUrl || !teachStyle) throw new Error('欄位不可為空')
+    return Teacher.findByPk(req.params.id)
+      .then(teacher => {
+        if (teacher.id !== req.user.Teacher.id) throw new Error('僅能修改自己的教師資料')
+        return teacher.update({
+          courseIntroduce,
+          courseUrl,
+          teachStyle
+        })
+      })
+      .then(updatedTeacher => {
+        return next(null, {
+          status: 'success',
+          teacher: updatedTeacher
         })
       })
       .catch(err => next(err))

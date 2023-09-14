@@ -12,8 +12,20 @@ const teacherController = {
       else return res.json({ data })
     })
   },
-  getAllTeachers: (req, res) => {
-    teacherServices.getAllTeachers(req, (err, data) => {
+  getTeachers: (req, res) => {
+    teacherServices.getTeachers(req, (err, data) => {
+      if (err) return res.status(400).json({ status: 'error', message: err.message })
+      else return res.json({ data })
+    })
+  },
+  getTeacher: (req, res) => {
+    teacherServices.getTeacher(req, (err, data) => {
+      if (err) return res.status(400).json({ status: 'error', message: err.message })
+      else return res.json({ data })
+    })
+  },
+  putTeacher: (req, res) => {
+    teacherServices.putTeacher(req, (err, data) => {
       if (err) return res.status(400).json({ status: 'error', message: err.message })
       else return res.json({ data })
     })
