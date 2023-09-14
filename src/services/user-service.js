@@ -36,11 +36,13 @@ const userService = {
           courseIntroduce,
           courseUrl,
           teachStyle,
-          userId: String(updatedUser.id)
+          userId: updatedUser.id
         }).then(createdTeacher => {
+          const user = updatedUser.toJSON()
+          delete user.password
           return next(null, {
             status: 'success',
-            user: updatedUser,
+            user,
             teacher: createdTeacher
           })
         })
@@ -52,6 +54,7 @@ const userService = {
     const TOP_USERS_AMOUNT = 10
     return User.findAll(
       {
+        attributes: { exclude: ['password'] },
         // where: { isTeacher: false }, // 如果你需要剔除老師
         limit: TOP_USERS_AMOUNT,
         order: [['learningHour', 'DESC']]
