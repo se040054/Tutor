@@ -75,12 +75,33 @@ const userService = {
     })
       .then(user => {
         if (!user) throw new Error('查無用戶')
-        if (user.id !== req.user.id) throw new Error('僅能查看自己的頁面')
+        if (user.id !== req.user.id) throw new Error('僅能查看自己的資訊')
         return next(null, {
           status: 'success',
           user
         })
       }).catch(err => next(err))
+  },
+  putUser: (req, next) => {
+    const { name, introduction } = req.body
+    if (!name || !introduction) return next(null, { status: 'none', message: '沒有修改資料' })
+    return User.findByPk(req.params.id, {
+      attributes: { exclude: ['password'] }
+    })
+      .then(user => {
+        if (!user) throw new Error('查無用戶')
+        if (user.id !== req.user.id) throw new Error('僅能修改自己的資訊')
+        return user.update({
+          name,
+          introduction
+        })
+      }).then(updatedUser => {
+        return next(null, {
+          status: 'success',
+          user: updatedUser
+        })
+      })
+      .catch(err => next(err))
   }
 }
 

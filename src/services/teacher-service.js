@@ -6,6 +6,7 @@ const teacherService = {
   addLesson: (req, next) => {
     const teacherId = req.user.Teacher.id
     const { duration, daytime } = req.body
+    if (!duration || !daytime) throw new Error('時長和時段未填寫')
     const MAXIMUM_DURATION_MINUTE = 480
     const MINIMUM_DURATION_MINUTE = 30
     const EARLIEST_DAYTIME_HOUR = 18
@@ -109,7 +110,10 @@ const teacherService = {
           model: User,
           attributes: { exclude: ['password'] }
         },
-        { model: Lesson }
+        {
+          model: Lesson,
+          where: { isReserved: false }
+        }
       ]
     })
       .then(teacher => {

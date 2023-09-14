@@ -12,5 +12,5 @@ router.get('/users/me', authenticated, (req, res) => {
   res.json({ status: 'success', data: req.user })
 })
 router.get('/users/:id', authenticated, userController.getUser)
-
+router.put('/users/:id', authenticated, userController.putUser)
 module.exports = router
