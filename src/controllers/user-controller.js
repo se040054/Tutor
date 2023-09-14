@@ -4,11 +4,8 @@ const jwt = require('jsonwebtoken')
 const userController = {
   register: (req, res) => {
     userService.register(req, (err, data) => {
-      if (err) {
-        return res.status(400).json({ status: 'error', message: err.message })
-      } else {
-        return res.json({ data })
-      }
+      if (err) return res.status(400).json({ status: 'error', message: err.message })
+      else return res.json({ data })
     })
   },
   login: (req, res, next) => {
@@ -29,11 +26,8 @@ const userController = {
   },
   applyTeacher: (req, res) => {
     userService.applyTeacher(req, (err, data) => {
-      if (err) {
-        return res.status(400).json({ status: 'error', message: err.message })
-      } else {
-        return res.json({ data })
-      }
+      if (err) return res.status(400).json({ status: 'error', message: err.message })
+      else return res.json({ data })
     })
   }
 }

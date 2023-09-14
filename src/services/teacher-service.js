@@ -65,6 +65,27 @@ const teacherService = {
         })
       })
       .catch(err => next(err))
+  },
+  getAllTeachers: async (req, next) => {
+    let currentPage = req.query.page || 1
+    // let search = req.query.search || null
+    const teachersAmount = await Teacher.count()
+    const TEACHERS_PER_PAGE = 6
+    const totalPage = Math.ceil(teachersAmount / TEACHERS_PER_PAGE)
+    if (currentPage > totalPage) currentPage = totalPage
+    if (currentPage < 1) currentPage = 1
+    const offset = (currentPage - 1) * TEACHERS_PER_PAGE
+    return Teacher.findAll(
+      { offset, limit: TEACHERS_PER_PAGE }
+    )
+      .then(onePageTeachers => {
+        console.log(currentPage)
+        return next(null, {
+          status: 'success',
+          teachers: onePageTeachers
+        })
+      })
+      .catch(err => next(err))
   }
 }
 
