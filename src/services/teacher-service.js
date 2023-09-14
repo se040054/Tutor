@@ -126,6 +126,7 @@ const teacherService = {
     if (!courseIntroduce || !courseUrl || !teachStyle) throw new Error('欄位不可為空')
     return Teacher.findByPk(req.params.id)
       .then(teacher => {
+        if (!teacher) throw new Error('找不到此教師')
         if (teacher.id !== req.user.Teacher.id) throw new Error('僅能修改自己的教師資料')
         return teacher.update({
           courseIntroduce,

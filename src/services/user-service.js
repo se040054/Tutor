@@ -29,6 +29,7 @@ const userService = {
     if (!courseIntroduce || !courseUrl || !teachStyle) throw new Error('有資料未填寫')
     return User.findByPk(req.user.id)
       .then(user => {
+        if (!user) throw new Error('查無用戶')
         if (user.isTeacher) throw new Error('用戶已經是老師身分')
         return user.update({ isTeacher: true })
       }).then(updatedUser => {
@@ -60,6 +61,7 @@ const userService = {
         order: [['learningHour', 'DESC']]
       })
       .then(topUsers => {
+        if (!topUsers) throw new Error('查無用戶')
         return next(null, {
           status: 'success',
           users: topUsers
