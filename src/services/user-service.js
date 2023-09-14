@@ -66,6 +66,19 @@ const userService = {
         })
       })
       .catch(err => next(err))
+  },
+  getUser: (req, next) => {
+    return User.findByPk(req.params.id, {
+      attributes: { exclude: ['password'] }
+    })
+      .then(user => {
+        if (!user) throw new Error('查無用戶')
+        if (user.id !== req.user.id) throw new Error('僅能查看自己的頁面')
+        return next(null, {
+          status: 'success',
+          user
+        })
+      }).catch(err => next(err))
   }
 }
 
