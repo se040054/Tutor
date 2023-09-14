@@ -47,6 +47,22 @@ const userService = {
       }).catch(err => {
         return next(err)
       })
+  },
+  getTopLearningUsers: (req, next) => {
+    const TOP_USERS_AMOUNT = 10
+    return User.findAll(
+      {
+        // where: { isTeacher: false }, // 如果你需要剔除老師
+        limit: TOP_USERS_AMOUNT,
+        order: [['learningHour', 'DESC']]
+      })
+      .then(topUsers => {
+        return next(null, {
+          status: 'success',
+          users: topUsers
+        })
+      })
+      .catch(err => next(err))
   }
 }
 
