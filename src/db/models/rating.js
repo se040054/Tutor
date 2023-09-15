@@ -9,13 +9,15 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate (models) {
+    static associate(models) {
       // define association here
       Rating.belongsTo(models.User, { foreignKey: 'userId' })
       Rating.belongsTo(models.Reserve, { foreignKey: 'reserveId' })
     }
   }
   Rating.init({
+    score: DataTypes.FLOAT,
+    text: DataTypes.STRING,
     reserveId: DataTypes.INTEGER,
     userId: DataTypes.INTEGER
   }, {

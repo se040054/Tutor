@@ -166,6 +166,11 @@ const userService = {
       .catch(err => next(err))
   },
   postRating: (req, next) => {
+    const text = req.body.text
+    let score = Number(req.body.score)
+    if (!score || !text) throw new Error('評分和留言不可為空')
+    if (score > 5 || score < 1) throw new Error('評分只能介於1~5')
+    score = score.toFixed(1)
     return Promise.all([
       Reserve.findByPk(req.params.reserveId, {
         include: [Lesson]
@@ -184,6 +189,8 @@ const userService = {
         const lessonEndTime = moment(reserve.Lesson.daytime).clone().add(reserve.Lesson.duration, 'minutes')
         if (moment(lessonEndTime).isSameOrAfter(moment())) throw new Error('只能評價上完的課程')
         return Rating.create({
+          score,
+          text,
           reserveId: req.params.reserveId,
           userId: req.user.id
         })
