@@ -1,4 +1,4 @@
-const { User, Teacher, Lesson, Reserve } = require('../db/models')
+const { User, Teacher, Lesson, Reserve, Rating } = require('../db/models')
 const bcrypt = require('bcryptjs')
 const moment = require('moment')
 const userService = {
@@ -59,7 +59,7 @@ const userService = {
         attributes: { exclude: ['password'] },
         // where: { isTeacher: false }, // 如果你需要剔除老師
         limit: TOP_USERS_AMOUNT,
-        order: [['learningHour', 'DESC']]
+        order: [['learningMinute', 'DESC']]
       })
       .then(topUsers => {
         if (!topUsers) throw new Error('查無用戶')
@@ -161,6 +161,42 @@ const userService = {
                   lesson: updatedLesson
                 })
               })
+          })
+      })
+      .catch(err => next(err))
+  },
+  postRating: (req, next) => {
+    return Promise.all([
+      Reserve.findByPk(req.params.reserveId, {
+        include: [Lesson]
+      }),
+      Rating.findOne({
+        where: {
+          reserveId: req.params.reserveId,
+          userId: req.user.id
+        }
+      })
+    ])
+      .then(([reserve, rating]) => {
+        if (!reserve) throw new Error('查無上課紀錄')
+        if (rating) throw new Error('已經評價過了')
+        if (reserve.userId !== req.user.id) throw new Error('只能評價自己上的課程')
+        const lessonEndTime = moment(reserve.Lesson.daytime).clone().add(reserve.Lesson.duration, 'minutes')
+        if (moment(lessonEndTime).isSameOrAfter(moment())) throw new Error('只能評價上完的課程')
+        return Rating.create({
+          reserveId: req.params.reserveId,
+          userId: req.user.id
+        })
+          .then(async createdRating => {
+            const user = await User.findByPk(req.user.id)
+            // 注意increment不返回實例
+            await user.increment('learningMinute', { by: reserve.Lesson.duration })
+            await user.reload()
+            return next(null, {
+              status: 'success',
+              createdRating,
+              user
+            })
           })
       })
       .catch(err => next(err))

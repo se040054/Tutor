@@ -15,4 +15,5 @@ router.get('/users/:id', authenticated, userController.getUser)
 router.put('/users/:id', authenticated, userController.putUser)
 router.post('/reserve/:lessonId', authenticated, userController.postReserve)
 router.delete('/reserve/:lessonId', authenticated, userController.deleteReserve)
+router.post('/rating/:reserveId', authenticated, userController.postRating)
 module.exports = router

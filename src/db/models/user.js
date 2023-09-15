@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       User.hasOne(models.Teacher, { foreignKey: 'userId' })
       User.hasMany(models.Reserve, { foreignKey: 'userId' })
+      User.hasMany(models.Rating, { foreignKey: 'userId' })
     }
   }
   User.init({
@@ -21,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     password: DataTypes.STRING,
     isTeacher: DataTypes.BOOLEAN,
     isAdmin: DataTypes.BOOLEAN,
-    learningHour: DataTypes.INTEGER,
+    learningMinute: DataTypes.INTEGER,
     introduction: DataTypes.STRING
   }, {
     sequelize,
