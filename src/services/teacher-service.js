@@ -1,3 +1,4 @@
+const { Op } = require('sequelize')
 const { Lesson, Teacher, User } = require('../db/models')
 const moment = require('moment')
 require('moment-timezone').tz.setDefault('Asia/Taipei')
@@ -104,6 +105,9 @@ const teacherService = {
   },
   getTeacher: (req, next) => {
     const id = req.params.id
+    const now = moment()
+    const RESERVE_DEADLINE = 14
+    const deadline = now.clone().add(RESERVE_DEADLINE, 'days')
     return Teacher.findByPk(id, {
       include: [
         {
@@ -112,7 +116,11 @@ const teacherService = {
         },
         {
           model: Lesson,
-          where: { isReserved: false }
+          where: {
+            isReserved: false,
+            daytime: { [Op.between]: [now, deadline] } // 只返回14日內未預約課程
+          },
+          separate: true // 記得設置分隔 不然0課程的情況下老師也會返回0
         }
       ]
     })
