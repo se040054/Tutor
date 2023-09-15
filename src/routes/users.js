@@ -13,4 +13,6 @@ router.get('/users/me', authenticated, (req, res) => {
 })
 router.get('/users/:id', authenticated, userController.getUser)
 router.put('/users/:id', authenticated, userController.putUser)
+router.post('/reserve/:lessonId', authenticated, userController.postReserve)
+router.delete('/reserve/:lessonId', authenticated, userController.deleteReserve)
 module.exports = router

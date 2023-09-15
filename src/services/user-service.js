@@ -1,5 +1,6 @@
-const { User, Teacher } = require('../db/models')
+const { User, Teacher, Lesson, Reserve } = require('../db/models')
 const bcrypt = require('bcryptjs')
+const moment = require('moment')
 const userService = {
   register: (req, next) => {
     const { email, password, confirmPassword } = req.body
@@ -100,6 +101,67 @@ const userService = {
           status: 'success',
           user: updatedUser
         })
+      })
+      .catch(err => next(err))
+  },
+  postReserve: (req, next) => {
+    return Lesson.findByPk(req.params.lessonId, {
+      include: [{
+        model: Teacher,
+        include: [User]
+      }]
+    })
+      .then(lesson => {
+        const now = moment()
+        const RESERVE_DEADLINE = 14
+        const deadline = now.clone().add(RESERVE_DEADLINE, 'days')
+        if (!lesson) throw new Error('找不到此課程')
+        if (lesson.isReserved) throw new Error('課程已經被預約了')
+        if (lesson.Teacher.User.id === req.user.id) throw new Error('不能預約自己的課程')
+        if (moment(lesson.daytime).isSameOrBefore(now)) throw new Error('不能預約已過期的課程')
+        if (!moment(lesson.daytime).isBetween(now, deadline)) throw new Error('僅能預約14日內的課程')
+        return Reserve.create({
+          userId: req.user.id,
+          lessonId: req.params.lessonId
+        })
+          .then(createdReserve => {
+            return lesson.update({ isReserved: true })
+              .then(updatedLesson => {
+                return next(null, {
+                  status: 'success',
+                  reserve: createdReserve,
+                  lesson: updatedLesson
+                })
+              }).catch(err => next(err))
+          })
+      }).catch(err => next(err))
+  },
+  deleteReserve: (req, next) => {
+    // 這邊要用all 才可以查找預約和課程 (如果用聯表查詢無法得知是預約還是課程不存在)
+    return Promise.all([
+      Reserve.findOne({
+        where: {
+          userId: req.user.id,
+          lessonId: req.params.lessonId
+        }
+      }),
+      Lesson.findByPk(req.params.lessonId)
+    ])
+      .then(([reserve, lesson]) => {
+        if (!lesson) throw new Error('找不到課程')
+        if (!reserve) throw new Error('此課程未預約或不是您的預約')
+        if (moment(lesson.daytime).isSameOrBefore(moment())) throw new Error('不可取消已完成的課程')
+        return reserve.destroy()
+          .then(deletedReserve => {
+            return lesson.update({ isReserved: false })
+              .then(updatedLesson => {
+                return next(null, {
+                  status: 'success',
+                  reserve: deletedReserve,
+                  lesson: updatedLesson
+                })
+              })
+          })
       })
       .catch(err => next(err))
   }
