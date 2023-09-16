@@ -1,7 +1,7 @@
 'use strict'
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Ratings', {
       id: {
         allowNull: false,
@@ -22,7 +22,9 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Reserves',
-          key: 'id'
+          key: 'id',
+          onDelete: 'CASCADE',
+          onUpdate: 'CASCADE'
         }
       },
       user_id: {
@@ -30,7 +32,9 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Users',
-          key: 'id'
+          key: 'id',
+          onDelete: 'CASCADE',
+          onUpdate: 'CASCADE'
         }
       },
       created_at: {
@@ -43,7 +47,7 @@ module.exports = {
       }
     })
   },
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Ratings')
   }
 }

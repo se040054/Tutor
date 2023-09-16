@@ -111,7 +111,7 @@ const userService = {
         include: [User]
       }]
     })
-      .then(lesson => {
+      .then(async lesson => {
         const now = moment()
         const RESERVE_DEADLINE = 14
         const deadline = now.clone().add(RESERVE_DEADLINE, 'days')
@@ -120,20 +120,16 @@ const userService = {
         if (lesson.Teacher.User.id === req.user.id) throw new Error('不能預約自己的課程')
         if (moment(lesson.daytime).isSameOrBefore(now)) throw new Error('不能預約已過期的課程')
         if (!moment(lesson.daytime).isBetween(now, deadline)) throw new Error('僅能預約14日內的課程')
-        return Reserve.create({
+        const createdReserve = await Reserve.create({
           userId: req.user.id,
           lessonId: req.params.lessonId
         })
-          .then(createdReserve => {
-            return lesson.update({ isReserved: true })
-              .then(updatedLesson => {
-                return next(null, {
-                  status: 'success',
-                  reserve: createdReserve,
-                  lesson: updatedLesson
-                })
-              }).catch(err => next(err))
-          })
+        const updatedLesson = await lesson.update({ isReserved: true })
+        return next(null, {
+          status: 'success',
+          reserve: createdReserve,
+          lesson: updatedLesson
+        })
       }).catch(err => next(err))
   },
   deleteReserve: (req, next) => {
@@ -147,21 +143,17 @@ const userService = {
       }),
       Lesson.findByPk(req.params.lessonId)
     ])
-      .then(([reserve, lesson]) => {
+      .then(async ([reserve, lesson]) => {
         if (!lesson) throw new Error('找不到課程')
         if (!reserve) throw new Error('此課程未預約或不是您的預約')
         if (moment(lesson.daytime).isSameOrBefore(moment())) throw new Error('不可取消已完成的課程')
-        return reserve.destroy()
-          .then(deletedReserve => {
-            return lesson.update({ isReserved: false })
-              .then(updatedLesson => {
-                return next(null, {
-                  status: 'success',
-                  reserve: deletedReserve,
-                  lesson: updatedLesson
-                })
-              })
-          })
+        const deletedReserve = await reserve.destroy()
+        const updatedLesson = await lesson.update({ isReserved: false })
+        return next(null, {
+          status: 'success',
+          reserve: deletedReserve,
+          lesson: updatedLesson
+        })
       })
       .catch(err => next(err))
   },
