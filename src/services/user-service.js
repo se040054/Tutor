@@ -1,4 +1,4 @@
-const { User, Teacher, Lesson, Reserve, Rating } = require('../db/models')
+const { User, Teacher, Lesson, Reserve, Rating, sequelize } = require('../db/models')
 const bcrypt = require('bcryptjs')
 const moment = require('moment')
 const userService = {
@@ -72,14 +72,20 @@ const userService = {
   },
   getUser: (req, next) => {
     return User.findByPk(req.params.id, {
-      attributes: { exclude: ['password'] }
+      attributes: { exclude: ['password'] },
+      include: [{ model: Reserve }]
     })
-      .then(user => {
+      .then(async user => {
         if (!user) throw new Error('查無用戶')
         if (user.id !== req.user.id) throw new Error('僅能查看自己的資訊')
+        const { QueryTypes } = require('sequelize')
+        const rankingQuery = 'select u.id, Rank() over(order by u.learning_minute DESC) ranking from users u'
+        const usersWithRank = await sequelize.query(rankingQuery, { type: QueryTypes.SELECT }) // 不返回metadata
+        const userRanking = usersWithRank.find(userRank => userRank.id === user.id)
         return next(null, {
           status: 'success',
-          user
+          user,
+          userRanking
         })
       }).catch(err => next(err))
   },
