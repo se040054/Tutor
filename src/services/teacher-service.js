@@ -1,5 +1,5 @@
 const { Op } = require('sequelize')
-const { Lesson, Teacher, User } = require('../db/models')
+const { Lesson, Teacher, User, Reserve, Rating } = require('../db/models')
 const moment = require('moment')
 require('moment-timezone').tz.setDefault('Asia/Taipei')
 
@@ -109,25 +109,34 @@ const teacherService = {
     const RESERVE_DEADLINE = 14
     const deadline = now.clone().add(RESERVE_DEADLINE, 'days')
     return Teacher.findByPk(id, {
-      include: [
-        {
-          model: User,
-          attributes: { exclude: ['password'] }
+      include: [{
+        model: User,
+        attributes: { exclude: ['password'] }
+      },
+      {
+        model: Lesson,
+        where: {
+          daytime: { [Op.between]: [now, deadline] } // 只返回14日內課程
         },
-        {
-          model: Lesson,
-          where: {
-            daytime: { [Op.between]: [now, deadline] } // 只返回14日內課程
-          },
-          separate: true // 記得設置分隔 不然0課程的情況下老師也會返回0
-        }
-      ]
+        separate: true // 記得設置分隔 不然0課程的情況下老師也會返回0
+      }]
     })
-      .then(teacher => {
+      .then(async teacher => {
         if (!teacher) throw new Error('找不到此教師')
+        const teacherRating = await Teacher.findByPk(id, {
+          include: [{
+            model: Lesson,
+            include: [{
+              model: Reserve,
+              include: [Rating],
+              required: true // 只有有找到評分的Lesson紀錄會被返回
+            }]
+          }]
+        })
         return next(null, {
           status: 'success',
-          teacher
+          teacher, // 這邊附帶的是14天內未預約課程的teacher
+          teacherWithRating: teacherRating // 這邊是有評價課程的teacher
         })
       })
       .catch(err => next(err))
