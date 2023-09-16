@@ -152,6 +152,34 @@ const teacherService = {
         })
       })
       .catch(err => next(err))
+  },
+  getMyLessons: (req, next) => {
+    // 中間件已驗證教師身分
+    return Lesson.findAll({ where: { teacherId: req.user.Teacher.id } })
+      .then(lessons => {
+        if (lessons.length < 1) throw new Error('尚未創建任何課程')
+        return next(null, {
+          status: 'success',
+          lessons
+        })
+      })
+      .catch(err => next(err))
+  },
+  deleteLesson: (req, next) => {
+    return Lesson.findByPk(req.params.id)
+      .then(async lesson => {
+        if (!lesson) throw new Error('查無此課程')
+        if (lesson.isReserved) throw new Error('不可刪除已預約/已完成的課程')
+        if (lesson.teacherId !== req.user.Teacher.id) throw new Error('禁止刪除他人課程')
+        return lesson.destroy()
+      })
+      .then(deletedLesson => {
+        return next(null, {
+          status: 'success',
+          lesson: deletedLesson
+        })
+      })
+      .catch(err => next(err))
   }
 }
 
