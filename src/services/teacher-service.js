@@ -128,8 +128,12 @@ const teacherService = {
             model: Lesson,
             include: [{
               model: Reserve,
-              include: [Rating],
-              required: true // 只有有找到評分的Lesson紀錄會被返回
+              include: [{
+                model: Rating,
+                required: true
+              }],
+              required: true
+              // 只有有找到評分的Lesson紀錄會被返回
             }]
           }]
         })

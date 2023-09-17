@@ -8,7 +8,7 @@ const { Teacher, Lesson, User } = require('../db/models')
 
 const authenticated = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user) => { // (err, user) 是cb函式
-    if (err || !user) return res.status(403).json({ status: 'error', message: '未授權' })
+    if (err || !user) return res.status(403).json({ status: 'error', message: '請先登入' })
     delete user.password
     req.user = user // 被cb覆蓋掉了 記得寫回來 否則登入不會有req.user
     next()
@@ -17,7 +17,7 @@ const authenticated = (req, res, next) => {
 
 const authenticatedAdmin = (req, res, next) => {
   if (req.user && req.user.isAdmin) return next()
-  return res.status(403).json({ status: 'error', message: '未授權' })
+  return res.status(403).json({ status: 'error', message: '無權使用' })
 }
 
 const authenticatedTeacher = (req, res, next) => {
