@@ -7,6 +7,7 @@ const { authenticated } = require('../middleware/api-auth')
 const users = require('./users')
 const oauth = require('./oauth')
 const teacher = require('./teacher')
+const admin = require('./admin')
 router.get('/home', authenticated, (req, res) => {
   res.json({ data: 'here is home' })
 })
@@ -14,6 +15,7 @@ router.get('/home', authenticated, (req, res) => {
 router.use(users)
 router.use(oauth)
 router.use(teacher)
+router.use(admin)
 router.use(apiErrorHandler)
 
 module.exports = router
