@@ -1,4 +1,4 @@
-const { User, Teacher, Lesson, Reserve, Rating, sequelize } = require('../db/models')
+const { User, Teacher, Lesson, Reserve, Rating, sequelize, Sequelize } = require('../db/models')
 const bcrypt = require('bcryptjs')
 const moment = require('moment')
 const userService = {
@@ -25,32 +25,34 @@ const userService = {
       })
       .catch(err => next(err))
   },
-  applyTeacher: (req, next) => {
+  applyTeacher: async (req, next) => {
     const { courseIntroduce, courseUrl, teachStyle } = req.body
-    if (!courseIntroduce || !courseUrl || !teachStyle) throw new Error('有資料未填寫')
-    return User.findByPk(req.user.id)
-      .then(user => {
-        if (!user) throw new Error('查無用戶')
-        if (user.isTeacher) throw new Error('用戶已經是老師身分')
-        return user.update({ isTeacher: true })
-      }).then(updatedUser => {
-        return Teacher.create({
-          courseIntroduce,
-          courseUrl,
-          teachStyle,
-          userId: updatedUser.id
-        }).then(createdTeacher => {
-          const user = updatedUser.toJSON()
-          delete user.password
-          return next(null, {
-            status: 'success',
-            user,
-            teacher: createdTeacher
-          })
-        })
-      }).catch(err => {
-        return next(err)
+    if (!courseIntroduce || !courseUrl || !teachStyle) return next(new Error('有資料未填寫'))
+    let user = await User.findByPk(req.user.id).catch(err => next(err))
+    if (!user) return next(new Error('查無用戶'))
+    if (user.isTeacher) return next(new Error('用戶已經是老師身分'))
+    const transaction = await sequelize.transaction()
+    try {
+      const updatedUser = await user.update({ isTeacher: true }, { transaction })
+      const createdTeacher = await Teacher.create({
+        courseIntroduce,
+        courseUrl,
+        teachStyle,
+        userId: updatedUser.id
+      }, { transaction })
+      await transaction.commit()
+      user = updatedUser.toJSON()
+      delete user.password
+      return next(null, {
+        status: 'success',
+        user,
+        teacher: createdTeacher
       })
+    } catch (err) {
+      console.log(err)
+      await transaction.rollback()
+      return next(err)
+    }
   },
   getTopLearningUsers: (req, next) => {
     const TOP_USERS_AMOUNT = 10
@@ -110,101 +112,109 @@ const userService = {
       })
       .catch(err => next(err))
   },
-  postReserve: (req, next) => {
-    return Lesson.findByPk(req.params.lessonId, {
+  postReserve: async (req, next) => {
+    const lesson = await Lesson.findByPk(req.params.lessonId, {
       include: [{
         model: Teacher,
         include: [User]
       }]
-    })
-      .then(async lesson => {
-        const now = moment()
-        const RESERVE_DEADLINE = 14
-        const deadline = now.clone().add(RESERVE_DEADLINE, 'days')
-        if (!lesson) throw new Error('找不到此課程')
-        if (lesson.isReserved) throw new Error('課程已經被預約了')
-        if (lesson.Teacher.User.id === req.user.id) throw new Error('不能預約自己的課程')
-        if (moment(lesson.daytime).isSameOrBefore(now)) throw new Error('不能預約已過期的課程')
-        if (!moment(lesson.daytime).isBetween(now, deadline)) throw new Error('僅能預約14日內的課程')
-        const createdReserve = await Reserve.create({
-          userId: req.user.id,
-          lessonId: req.params.lessonId
-        })
-        const updatedLesson = await lesson.update({ isReserved: true })
-        return next(null, {
-          status: 'success',
-          reserve: createdReserve,
-          lesson: updatedLesson
-        })
-      }).catch(err => next(err))
-  },
-  deleteReserve: (req, next) => {
-    // 這邊要用all 才可以查找預約和課程 (如果用聯表查詢無法得知是預約還是課程不存在)
-    return Promise.all([
-      Reserve.findOne({
-        where: {
-          userId: req.user.id,
-          lessonId: req.params.lessonId
-        }
-      }),
-      Lesson.findByPk(req.params.lessonId)
-    ])
-      .then(async ([reserve, lesson]) => {
-        if (!lesson) throw new Error('找不到課程')
-        if (!reserve) throw new Error('此課程未預約或不是您的預約')
-        if (moment(lesson.daytime).isSameOrBefore(moment())) throw new Error('不可取消已完成的課程')
-        const deletedReserve = await reserve.destroy()
-        const updatedLesson = await lesson.update({ isReserved: false })
-        return next(null, {
-          status: 'success',
-          reserve: deletedReserve,
-          lesson: updatedLesson
-        })
+    }).catch(err => next(err))
+    const now = moment()
+    const RESERVE_DEADLINE = 14
+    const deadline = now.clone().add(RESERVE_DEADLINE, 'days')
+    if (!lesson) return next(new Error('找不到此課程'))
+    if (lesson.isReserved) return next(new Error('課程已經被預約了'))
+    if (lesson.Teacher.User.id === req.user.id) return next(new Error('不能預約自己的課程'))
+    if (moment(lesson.daytime).isSameOrBefore(now)) return next(new Error('不能預約已過期的課程'))
+    if (!moment(lesson.daytime).isBetween(now, deadline)) return next(new Error('僅能預約14日內的課程'))
+    const transaction = await sequelize.transaction()
+    try {
+      const createdReserve = await Reserve.create({
+        userId: req.user.id,
+        lessonId: req.params.lessonId
+      }, { transaction })
+      const updatedLesson = await lesson.update({ isReserved: true }, { transaction })
+      await transaction.commit()
+      return next(null, {
+        status: 'success',
+        reserve: createdReserve,
+        lesson: updatedLesson
       })
-      .catch(err => next(err))
+    } catch (err) {
+      console.log(err)
+      await transaction.rollback()
+      return next(err)
+    }
   },
-  postRating: (req, next) => {
+  deleteReserve: async (req, next) => {
+    const reserve = await Reserve.findOne({
+      where: {
+        userId: req.user.id, lessonId: req.params.lessonId
+      }
+    }).catch(err => next(err))
+    const lesson = await Lesson.findByPk(req.params.lessonId).catch(err => next(err))
+    if (!lesson) return next(new Error('找不到課程'))
+    if (!reserve) return next(new Error('此課程未預約或不是您的預約'))
+    if (moment(lesson.daytime).isSameOrBefore(moment())) return next(new Error('不可取消已完成的課程'))
+    const transaction = await sequelize.transaction()
+    try {
+      const deletedReserve = await reserve.destroy({ transaction })
+      const updatedLesson = await lesson.update({ isReserved: false }, { transaction })
+      await transaction.commit()
+      return next(null, {
+        status: 'success',
+        reserve: deletedReserve,
+        lesson: updatedLesson
+      })
+    } catch (err) {
+      console.log(err)
+      await transaction.rollback()
+      return next(err)
+    }
+  },
+  postRating: async (req, next) => {
     const text = req.body.text
     let score = Number(req.body.score)
-    if (!score || !text) throw new Error('評分和留言不可為空')
-    if (score > 5 || score < 1) throw new Error('評分只能介於1~5')
+    if (!score || !text) return next(new Error('評分和留言不可為空'))
+    if (score > 5 || score < 1) return next(new Error('評分只能介於1~5'))
     score = score.toFixed(1)
-    return Promise.all([
-      Reserve.findByPk(req.params.reserveId, {
-        include: [Lesson]
-      }),
-      Rating.findOne({
-        where: {
-          reserveId: req.params.reserveId,
-          userId: req.user.id
-        }
+    const reserve = await Reserve.findByPk(req.params.reserveId, {
+      include: [Lesson]
+    }).catch(err => next(err))
+    const rating = await Rating.findOne({
+      where: {
+        reserveId: req.params.reserveId,
+        userId: req.user.id
+      }
+    }).catch(err => next(err))
+    if (!reserve) return next(new Error('查無上課紀錄'))
+    if (rating) return next(new Error('已經評價過了'))
+    if (reserve.userId !== req.user.id) return next(new Error('只能評價自己上的課程'))
+    const lessonEndTime = moment(reserve.Lesson.daytime).clone().add(reserve.Lesson.duration, 'minutes')
+    if (moment(lessonEndTime).isSameOrAfter(moment())) return next(new Error('只能評價上完的課程'))
+    const transaction = await sequelize.transaction()
+    try {
+      const createdRating = await Rating.create({
+        score,
+        text,
+        reserveId: req.params.reserveId,
+        userId: req.user.id
+      }, { transaction })
+      const user = await User.findByPk(req.user.id)
+      // 注意increment不返回實例 ，並且注意這裡的交易位置
+      await user.increment('learningMinute', { by: reserve.Lesson.duration, transaction })
+      await user.reload()
+      await transaction.commit()
+      return next(null, {
+        status: 'success',
+        createdRating,
+        user
       })
-    ])
-      .then(([reserve, rating]) => {
-        if (!reserve) throw new Error('查無上課紀錄')
-        if (rating) throw new Error('已經評價過了')
-        if (reserve.userId !== req.user.id) throw new Error('只能評價自己上的課程')
-        const lessonEndTime = moment(reserve.Lesson.daytime).clone().add(reserve.Lesson.duration, 'minutes')
-        if (moment(lessonEndTime).isSameOrAfter(moment())) throw new Error('只能評價上完的課程')
-        return Rating.create({
-          score,
-          text,
-          reserveId: req.params.reserveId,
-          userId: req.user.id
-        })
-          .then(async createdRating => {
-            const user = await User.findByPk(req.user.id)
-            // 注意increment不返回實例
-            await user.increment('learningMinute', { by: reserve.Lesson.duration })
-            await user.reload()
-            return next(null, {
-              status: 'success',
-              createdRating,
-              user
-            })
-          })
-      })
-      .catch(err => next(err))
+    } catch (err) {
+      console.log(err)
+      await transaction.rollback()
+      return next(err)
+    }
   }
 }
 
