@@ -18,7 +18,8 @@ module.exports = (sequelize, DataTypes) => {
     courseIntroduce: DataTypes.STRING, // 修正
     courseUrl: DataTypes.STRING, // 修正
     teachStyle: DataTypes.STRING, // 修正
-    userId: DataTypes.INTEGER
+    userId: DataTypes.INTEGER,
+    avatar: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Teacher',
