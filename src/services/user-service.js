@@ -60,7 +60,6 @@ const userService = {
         }
         const userData = (user || googleUser).toJSON()
         delete userData.password
-        console.log(userData)
         const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '30d' })
         return next(null, {
           status: 'success',
