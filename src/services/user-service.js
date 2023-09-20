@@ -1,6 +1,8 @@
 const { User, Teacher, Lesson, Reserve, Rating, sequelize, Sequelize } = require('../db/models')
 const bcrypt = require('bcryptjs')
 const moment = require('moment')
+const jwt = require('jsonwebtoken')
+
 const userService = {
   register: (req, next) => {
     const { email, password, confirmPassword } = req.body
@@ -24,6 +26,50 @@ const userService = {
         })
       })
       .catch(err => next(err))
+  },
+  login: (req, next) => {
+    try {
+      const userData = req.user.toJSON()
+      delete userData.password // 密碼不能洩漏
+      const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '30d' }) // 這行就是passport解開的資料
+      return next(null, {
+        status: 'success',
+        data: {
+          token,
+          user: userData
+        }
+      })
+    } catch (err) {
+      console.log(err)
+      return next(err)
+    }
+  },
+  googleLogin: (req, next) => {
+    const { email, name } = req.body
+    if (!email || !name) return next(new Error('發生錯誤，請使用google登入'))
+    let googleUser
+    return User.findOne({ where: { email } })
+      .then(async user => {
+        if (!user) {
+          googleUser = await User.create({
+            email,
+            name,
+            password: bcrypt.hashSync(Math.random().toString(36).slice(2), 10)
+          })
+          await googleUser.reload() // 記得reload不然只會有你輸入的資料
+        }
+        const userData = (user || googleUser).toJSON()
+        delete userData.password
+        console.log(userData)
+        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '30d' })
+        return next(null, {
+          status: 'success',
+          data: {
+            token,
+            user: userData
+          }
+        })
+      }).catch(err => next(err))
   },
   applyTeacher: async (req, next) => {
     const { courseIntroduce, courseUrl, teachStyle } = req.body
