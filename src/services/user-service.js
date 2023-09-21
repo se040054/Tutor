@@ -120,7 +120,19 @@ const userService = {
   getUser: (req, next) => {
     return User.findByPk(req.params.id, {
       attributes: { exclude: ['password'] },
-      include: [{ model: Reserve }]
+      include: [{
+        model: Reserve,
+        include: [{
+          model: Lesson,
+          include: [{
+            model: Teacher,
+            include: [{
+              model: User,
+              attributes: { exclude: ['password'] }
+            }]
+          }]
+        }]
+      }]
     })
       .then(async user => {
         if (!user) throw new Error('查無用戶')
