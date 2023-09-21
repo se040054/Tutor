@@ -124,24 +124,41 @@ const teacherService = {
     })
       .then(async teacher => {
         if (!teacher) throw new Error('找不到此教師')
-        const teacherRating = await Teacher.findByPk(id, {
+        const highestRatingLessons = await Lesson.findAll({
+          where: { teacherId: teacher.id },
           include: [{
-            model: Lesson,
+            model: Reserve,
+            required: true,
             include: [{
-              model: Reserve,
-              include: [{
-                model: Rating,
-                required: true
-              }],
+              model: Rating,
               required: true
-              // 只有有找到評分的Lesson紀錄會被返回
             }]
-          }]
+          }],
+          order: [
+            ['Reserve', 'Rating', 'score', 'DESC']
+          ],
+          limit: 2
+        })
+        const lowestRatingLessons = await Lesson.findAll({
+          where: { teacherId: teacher.id },
+          include: [{
+            model: Reserve,
+            required: true,
+            include: [{
+              model: Rating,
+              required: true
+            }]
+          }],
+          order: [
+            ['Reserve', 'Rating', 'score', 'ASC']
+          ],
+          limit: 2
         })
         return next(null, {
           status: 'success',
           teacher, // 這邊附帶的是14天內未預約課程的teacher
-          teacherWithRating: teacherRating // 這邊是有評價課程的teacher
+          highestRatingLessons,
+          lowestRatingLessons
         })
       })
       .catch(err => next(err))
