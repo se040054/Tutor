@@ -2,6 +2,7 @@ const { Op } = require('sequelize')
 const { Lesson, Teacher, User, Reserve, Rating } = require('../db/models')
 const moment = require('moment')
 require('moment-timezone').tz.setDefault('Asia/Taipei')
+
 const { localFileHandler } = require('../helpers/file-helper')
 
 const teacherService = {
@@ -19,7 +20,7 @@ const teacherService = {
     if (duration < MINIMUM_DURATION_MINUTE ||
       duration > MAXIMUM_DURATION_MINUTE) throw new Error('課程時長不符合')
     if (createdLessonStart.hour() < EARLIEST_DAYTIME_HOUR ||
-      createdLessonEnd.hour() >= LATEST_DAYTIME_HOUR) throw new Error('上課時段不符合')
+      createdLessonEnd.hour() >= LATEST_DAYTIME_HOUR) throw new Error('上課時段僅能於18~22時')
     if (createdLessonStart.isBefore(now)) throw new Error('創建的課程時間已過')
     return Teacher.findByPk(teacherId, {
       include: [Lesson],
@@ -75,19 +76,19 @@ const teacherService = {
     const teachersAmount = await Teacher.count({
       where: search
         ? {
-          [Op.or]: [
-            {
-              '$User.name$': {
-                [Op.substring]: `${search}`
+            [Op.or]: [
+              {
+                '$User.name$': {
+                  [Op.substring]: `${search}`
+                }
+              },
+              {
+                courseIntroduce: {
+                  [Op.substring]: `${search}`
+                }
               }
-            },
-            {
-              courseIntroduce: {
-                [Op.substring]: `${search}`
-              }
-            }
-          ]
-        }
+            ]
+          }
         : null,
       include: [{
         model: User
@@ -101,19 +102,19 @@ const teacherService = {
     return Teacher.findAll({
       where: search
         ? {
-          [Op.or]: [
-            {
-              '$User.name$': {
-                [Op.substring]: `${search}`
+            [Op.or]: [
+              {
+                '$User.name$': {
+                  [Op.substring]: `${search}`
+                }
+              },
+              {
+                courseIntroduce: {
+                  [Op.substring]: `${search}`
+                }
               }
-            },
-            {
-              courseIntroduce: {
-                [Op.substring]: `${search}`
-              }
-            }
-          ]
-        }
+            ]
+          }
         : null,
       include: [{
         model: User,
