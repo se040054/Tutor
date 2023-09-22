@@ -70,36 +70,65 @@ const teacherService = {
       .catch(err => next(err))
   },
   getTeachers: async (req, next) => {
-    let currentPage = req.query.page || 1
+    let currentPage = Number(req.query.page) || 1
     const search = req.query.search || null
-    const teachersAmount =
-      search
-        ? await Teacher.count({
-          include: [{
-            model: User,
-            where: { name: search }
-          }]
-        })
-        : await Teacher.count()
-    const TEACHERS_PER_PAGE = 6
+    const teachersAmount = await Teacher.count({
+      where: search
+        ? {
+          [Op.or]: [
+            {
+              '$User.name$': {
+                [Op.substring]: `${search}`
+              }
+            },
+            {
+              courseIntroduce: {
+                [Op.substring]: `${search}`
+              }
+            }
+          ]
+        }
+        : null,
+      include: [{
+        model: User
+      }]
+    })
+    const TEACHERS_PER_PAGE = Number(req.query.amount) || 6
     const totalPage = Math.ceil(teachersAmount / TEACHERS_PER_PAGE)
     if (currentPage > totalPage) currentPage = totalPage
     if (currentPage < 1) currentPage = 1
     const offset = (currentPage - 1) * TEACHERS_PER_PAGE
     return Teacher.findAll({
+      where: search
+        ? {
+          [Op.or]: [
+            {
+              '$User.name$': {
+                [Op.substring]: `${search}`
+              }
+            },
+            {
+              courseIntroduce: {
+                [Op.substring]: `${search}`
+              }
+            }
+          ]
+        }
+        : null,
       include: [{
         model: User,
-        attributes: { exclude: ['password'] },
-        where: search ? { name: search } : null
+        attributes: { exclude: ['password'] }
       }],
       offset,
       limit: TEACHERS_PER_PAGE
     })
       .then(onePageTeachers => {
-        if (onePageTeachers.length < 1) throw new Error('查無搜尋結果')
+        // console.log(onePageTeachers)
+        // if (onePageTeachers.length < 1) throw new Error('查無搜尋結果')
         return next(null, {
           status: 'success',
-          teachers: onePageTeachers
+          teachers: onePageTeachers,
+          totalAmount: teachersAmount
         })
       })
       .catch(err => next(err))
