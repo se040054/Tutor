@@ -272,6 +272,13 @@ const userService = {
       await transaction.rollback()
       return next(err)
     }
+  },
+  getMe: (req, next) => {
+    const user = req.user
+    return next(null, {
+      status: 'success',
+      user
+    })
   }
 }
 

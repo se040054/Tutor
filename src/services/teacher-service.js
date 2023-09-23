@@ -55,9 +55,10 @@ const teacherService = {
       })
       .catch(err => next(err))
   },
-  showMe: (req, next) => {
+  getMe: (req, next) => {
     const teacherId = req.user.Teacher.id
     console.log(teacherId)
+    if (!teacherId) return next(new Error('您並非教師'))
     return Teacher.findByPk(teacherId, {
       include: [Lesson],
       nest: true

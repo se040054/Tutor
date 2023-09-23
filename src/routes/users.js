@@ -10,6 +10,8 @@ router.post('/users/googleLogin', userController.googleLogin)
 router.post('/users/applyTeacher', authenticated, userController.applyTeacher)
 router.get('/users/topLearningUsers', authenticated, userController.getTopLearningUsers)
 
+router.get('/users/me', authenticated, userController.getMe)
+
 router.get('/users/:id', authenticated, userController.getUser)
 router.put('/users/:id', authenticated, userController.putUser)
 
@@ -17,9 +19,5 @@ router.post('/reserve/:lessonId', authenticated, userController.postReserve)
 router.delete('/reserve/:lessonId', authenticated, userController.deleteReserve)
 
 router.post('/rating/:reserveId', authenticated, userController.postRating)
-
-router.get('/users/me', authenticated, (req, res) => {
-  res.json({ status: 'success', data: req.user })
-})
 
 module.exports = router

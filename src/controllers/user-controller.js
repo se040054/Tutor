@@ -59,6 +59,12 @@ const userController = {
       if (err) return res.status(400).json({ status: 'error', message: err.message })
       else return res.json({ data })
     })
+  },
+  getMe: (req, res) => {
+    userService.getMe(req, (err, data) => {
+      if (err) return res.status(400).json({ status: 'error', message: err.message })
+      else return res.json({ data })
+    })
   }
 }
 
