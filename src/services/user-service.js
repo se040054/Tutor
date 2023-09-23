@@ -274,7 +274,9 @@ const userService = {
     }
   },
   getMe: (req, next) => {
-    const user = req.user
+    const user = req.user.toJSON()
+    delete user.password
+    console.log(user)
     return next(null, {
       status: 'success',
       user

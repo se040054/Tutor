@@ -57,10 +57,18 @@ const teacherService = {
   },
   getMe: (req, next) => {
     const teacherId = req.user.Teacher.id
-    console.log(teacherId)
     if (!teacherId) return next(new Error('您並非教師'))
     return Teacher.findByPk(teacherId, {
-      include: [Lesson],
+      include: [{
+        model: Lesson,
+        include: [{
+          model: Reserve,
+          required: false,
+          include: [
+            { model: Rating, required: false },
+            { model: User, required: false }]
+        }]
+      }],
       nest: true
     })
       .then(teacher => {
@@ -222,7 +230,7 @@ const teacherService = {
     // 中間件已驗證教師身分
     return Lesson.findAll({ where: { teacherId: req.user.Teacher.id } })
       .then(lessons => {
-        if (lessons.length < 1) throw new Error('尚未創建任何課程')
+        // if (lessons.length < 1) throw new Error('尚未創建任何課程')
         return next(null, {
           status: 'success',
           lessons
