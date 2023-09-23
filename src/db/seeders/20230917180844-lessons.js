@@ -4,19 +4,23 @@
 // 兩堂 昨天 已預約 未評分 2 3
 // 兩堂 明天的課 未預約 未評分 4 5
 const moment = require('moment')
+const { faker } = require('@faker-js/faker')
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    const yesterday = moment().subtract(2, 'days').toDate()
-    const twoDaysAgo = moment().subtract(3, 'days').toDate()
-    const tomorrow = moment().add(2, 'days').toDate()
-    const days = [twoDaysAgo, yesterday, tomorrow]
+  async up(queryInterface, Sequelize) {
+    const Before2Days = moment().subtract(2, 'days').toDate()
+    const Before3Days = moment().subtract(3, 'days').toDate()
+    const Before4Days = moment().subtract(4, 'days').toDate()
+    const Before5Days = moment().subtract(5, 'days').toDate()
+    const After10Days = moment().add(10, 'days').toDate()
+    const After11Days = moment().add(11, 'days').toDate()
+    const days = [Before2Days, Before3Days, Before4Days, Before5Days, After10Days, After11Days]
     let transaction
     try {
       transaction = await queryInterface.sequelize.transaction();
       const lessonArray = Array.from({ length: 60 }, (_, i) => ({
         duration: Math.ceil(Math.random() * 2) * 30,
-        daytime: days[Math.floor(i / 2) % 3],
+        daytime: days[i % days.length],
         is_reserved: i % 6 < 4,
         teacher_id: Math.floor((i) / 6) + 1,
         created_at: new Date(),
@@ -33,7 +37,7 @@ module.exports = {
         .filter(i => i % 6 !== 3 && i % 6 !== 4)
       const ratingArray = Array.from({ length: 20 }, (_, i) => ({
         score: Math.ceil(Math.random() * 40) / 10 + 1,
-        text: 'good lesson',
+        text: faker.lorem.sentence(),
         reserve_id: reserveIdNum[i],
         user_id: Math.floor(i / 4) + 2,
         created_at: new Date(),
@@ -54,7 +58,7 @@ module.exports = {
     }
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface, Sequelize) {
     let transaction
     try {
       transaction = await queryInterface.sequelize.transaction()
