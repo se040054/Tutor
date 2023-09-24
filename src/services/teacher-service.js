@@ -157,6 +157,7 @@ const teacherService = {
       {
         model: Lesson,
         where: {
+          isReserved: false,
           daytime: { [Op.between]: [now, deadline] } // 只返回14日內課程
         },
         separate: true // 記得設置分隔 不然0課程的情況下老師也會返回0
