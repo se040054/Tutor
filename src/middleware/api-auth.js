@@ -4,7 +4,7 @@ const passport = require('../../config/passport')
 // const authenticated = passport.authenticate('jwt', { session: false })
 // 其實 authenticate第三參數可以接受cb函式 但是要自己處理驗證成功時 req.user 給資料
 
-const { Teacher, Lesson, User } = require('../db/models')
+const { Teacher, User } = require('../db/models')
 
 const authenticated = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user) => { // (err, user) 是cb函式

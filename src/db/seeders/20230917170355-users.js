@@ -33,7 +33,7 @@ module.exports = {
         email: 'root@example.com',
         password: bcryptjs.hashSync('12345678', 10),
         is_admin: true,
-        is_teacher: true,
+        is_teacher: false,
         created_at: new Date(),
         updated_at: new Date()
       }], { transaction })

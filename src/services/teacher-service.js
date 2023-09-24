@@ -6,7 +6,7 @@ require('moment-timezone').tz.setDefault('Asia/Taipei')
 const { localFileHandler } = require('../helpers/file-helper')
 
 const teacherService = {
-  addLesson: (req, next) => {
+  postLesson: (req, next) => {
     const teacherId = req.user.Teacher.id
     const { duration, daytime } = req.body
     if (!duration || !daytime) throw new Error('時長和時段未填寫')
@@ -27,6 +27,7 @@ const teacherService = {
       nest: true
     })
       .then(teacher => {
+        if (!teacher) throw new Error('找不到此教師')
         // console.log(`老師的課程 : ${JSON.stringify(teacher.Lessons)}`)
         // 開始時間:課程時間，結束時間:課程時間+時長，開始時間與結束時間丟進新創建的時間比對
         // 注意moment.add因為是對物件做，調用會變成淺拷貝 要用clone
