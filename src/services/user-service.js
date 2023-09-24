@@ -123,16 +123,22 @@ const userService = {
       attributes: { exclude: ['password'] },
       include: [{
         model: Reserve,
-        include: [{
-          model: Lesson,
-          include: [{
-            model: Teacher,
+        include: [
+          {
+            model: Lesson,
             include: [{
-              model: User,
-              attributes: { exclude: ['password'] }
+              model: Teacher,
+              include: [{
+                model: User,
+                attributes: { exclude: ['password'] }
+              }]
             }]
-          }]
-        }]
+          },
+          {
+            model: Rating,
+            required: false
+          }
+        ]
       }]
     })
       .then(async user => {
