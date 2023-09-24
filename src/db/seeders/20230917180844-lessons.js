@@ -39,7 +39,6 @@ module.exports = {
         score: Math.ceil(Math.random() * 40) / 10 + 1,
         text: faker.lorem.sentence(),
         reserve_id: reserveIdNum[i],
-        user_id: Math.floor(i / 4) + 2,
         created_at: new Date(),
         updated_at: new Date()
       }))

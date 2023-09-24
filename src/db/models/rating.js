@@ -11,15 +11,13 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Rating.belongsTo(models.User, { foreignKey: 'userId' })
       Rating.belongsTo(models.Reserve, { foreignKey: 'reserveId' })
     }
   }
   Rating.init({
     score: DataTypes.FLOAT,
     text: DataTypes.STRING,
-    reserveId: DataTypes.INTEGER,
-    userId: DataTypes.INTEGER
+    reserveId: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Rating',

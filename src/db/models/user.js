@@ -13,7 +13,6 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       User.hasOne(models.Teacher, { foreignKey: 'userId' })
       User.hasMany(models.Reserve, { foreignKey: 'userId' })
-      User.hasMany(models.Rating, { foreignKey: 'userId' })
     }
   }
   User.init({

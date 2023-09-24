@@ -266,8 +266,7 @@ const userService = {
     }).catch(err => next(err))
     const rating = await Rating.findOne({
       where: {
-        reserveId: req.params.reserveId,
-        userId: req.user.id
+        reserveId: req.params.reserveId
       }
     }).catch(err => next(err))
     if (!reserve) return next(new Error('查無上課紀錄'))
