@@ -176,6 +176,10 @@ const userService = {
         include: [User]
       }]
     }).catch(err => next(err))
+    const myReserveLessons = await Reserve.findAll({
+      where: { userId: req.user.id },
+      include: [{ model: Lesson }]
+    }).catch(err => next(err))
     const now = moment()
     const RESERVE_DEADLINE = 14
     const deadline = now.clone().add(RESERVE_DEADLINE, 'days')
@@ -184,6 +188,18 @@ const userService = {
     if (lesson.Teacher.User.id === req.user.id) return next(new Error('不能預約自己的課程'))
     if (moment(lesson.daytime).isSameOrBefore(now)) return next(new Error('不能預約已過期的課程'))
     if (!moment(lesson.daytime).isBetween(now, deadline)) return next(new Error('僅能預約14日內的課程'))
+    const createdStart = moment(lesson.daytime)
+    const createdEnd = moment(createdStart).clone().add(lesson.duration, 'minutes')
+    // 這邊用forEach 不會終止迭代，只會終止當前迭代控制器繼續運行
+    for (let i = 0; i < myReserveLessons.length; i++) {
+      const start = moment(myReserveLessons[i].Lesson.daytime)
+      const end = start.clone().add(myReserveLessons[i].Lesson.duration, 'minutes')
+      if (start.isSameOrBefore(createdEnd) &&
+        end.isSameOrAfter(createdStart)) {
+        console.log('有重複的錯誤偵測')
+        return next(new Error('預約時段重複'))
+      }
+    }
     const transaction = await sequelize.transaction()
     try {
       const createdReserve = await Reserve.create({
