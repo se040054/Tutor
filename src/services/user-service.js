@@ -1,7 +1,8 @@
-const { User, Teacher, Lesson, Reserve, Rating, sequelize, Sequelize } = require('../db/models')
+const { User, Teacher, Lesson, Reserve, Rating, sequelize } = require('../db/models')
 const bcrypt = require('bcryptjs')
 const moment = require('moment')
 const jwt = require('jsonwebtoken')
+const { localFileHandler } = require('../helpers/file-helper')
 
 const userService = {
   register: (req, next) => {
@@ -148,9 +149,10 @@ const userService = {
         })
       }).catch(err => next(err))
   },
-  putUser: (req, next) => {
+  putUser: async (req, next) => {
     const { name, introduction } = req.body
-    if (!name || !introduction) return next(null, { status: 'none', message: '沒有修改資料' })
+    const { file } = req
+    const avatar = await localFileHandler(file)
     return User.findByPk(req.params.id, {
       attributes: { exclude: ['password'] }
     })
@@ -159,7 +161,8 @@ const userService = {
         if (user.id !== req.user.id) throw new Error('僅能修改自己的資訊')
         return user.update({
           name,
-          introduction
+          introduction,
+          avatar: avatar || user.avatar
         })
       }).then(updatedUser => {
         return next(null, {

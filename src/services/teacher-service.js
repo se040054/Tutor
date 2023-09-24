@@ -3,8 +3,6 @@ const { Lesson, Teacher, User, Reserve, Rating } = require('../db/models')
 const moment = require('moment')
 require('moment-timezone').tz.setDefault('Asia/Taipei')
 
-const { localFileHandler } = require('../helpers/file-helper')
-
 const teacherService = {
   postLesson: (req, next) => {
     const teacherId = req.user.Teacher.id
@@ -206,9 +204,6 @@ const teacherService = {
   },
   putTeacher: async (req, next) => {
     const { courseIntroduce, courseUrl, teachStyle } = req.body
-    const { file } = req
-    const avatar = await localFileHandler(file)
-
     return Teacher.findByPk(req.params.id)
       .then(teacher => {
         if (!teacher) throw new Error('找不到此教師')
@@ -217,7 +212,6 @@ const teacherService = {
           courseIntroduce: courseIntroduce || teacher.courseIntroduce,
           courseUrl: courseUrl || teacher.courseUrl,
           teachStyle: teachStyle || teacher.teachStyle,
-          avatar: avatar || teacher.avatar
         })
       })
       .then(updatedTeacher => {
