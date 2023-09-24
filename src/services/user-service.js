@@ -206,7 +206,8 @@ const userService = {
   deleteReserve: async (req, next) => {
     const reserve = await Reserve.findOne({
       where: {
-        userId: req.user.id, lessonId: req.params.lessonId
+        userId: req.user.id,
+        lessonId: req.params.lessonId
       }
     }).catch(err => next(err))
     const lesson = await Lesson.findByPk(req.params.lessonId).catch(err => next(err))
