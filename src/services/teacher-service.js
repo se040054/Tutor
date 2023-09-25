@@ -1,5 +1,5 @@
 const { Op } = require('sequelize')
-const { Lesson, Teacher, User, Reserve, Rating } = require('../db/models')
+const { Lesson, Teacher, User, Reserve, Rating, sequelize } = require('../db/models')
 const moment = require('moment')
 require('moment-timezone').tz.setDefault('Asia/Taipei')
 
@@ -84,19 +84,19 @@ const teacherService = {
     const teachersAmount = await Teacher.count({
       where: search
         ? {
-            [Op.or]: [
-              {
-                '$User.name$': {
-                  [Op.substring]: `${search}`
-                }
-              },
-              {
-                courseIntroduce: {
-                  [Op.substring]: `${search}`
-                }
+          [Op.or]: [
+            {
+              '$User.name$': {
+                [Op.substring]: `${search}`
               }
-            ]
-          }
+            },
+            {
+              courseIntroduce: {
+                [Op.substring]: `${search}`
+              }
+            }
+          ]
+        }
         : null,
       include: [{
         model: User
@@ -110,19 +110,19 @@ const teacherService = {
     return Teacher.findAll({
       where: search
         ? {
-            [Op.or]: [
-              {
-                '$User.name$': {
-                  [Op.substring]: `${search}`
-                }
-              },
-              {
-                courseIntroduce: {
-                  [Op.substring]: `${search}`
-                }
+          [Op.or]: [
+            {
+              '$User.name$': {
+                [Op.substring]: `${search}`
               }
-            ]
-          }
+            },
+            {
+              courseIntroduce: {
+                [Op.substring]: `${search}`
+              }
+            }
+          ]
+        }
         : null,
       include: [{
         model: User,
@@ -193,11 +193,26 @@ const teacherService = {
           ],
           limit: 2
         })
+        const avgRating = await Teacher.findByPk(id, {
+          attributes: [
+            [sequelize.fn('AVG', sequelize.col('Lessons.Reserve.Rating.score')), 'avgRating']
+          ],
+          include: [
+            {
+              model: Lesson,
+              include: [{
+                model: Reserve,
+                include: [{ model: Rating }]
+              }]
+            }
+          ]
+        })
         return next(null, {
           status: 'success',
           teacher, // 這邊附帶的是14天內未預約課程的teacher
           highestRatingLessons,
-          lowestRatingLessons
+          lowestRatingLessons,
+          avgRating
         })
       })
       .catch(err => next(err))
@@ -211,7 +226,7 @@ const teacherService = {
         return teacher.update({
           courseIntroduce: courseIntroduce || teacher.courseIntroduce,
           courseUrl: courseUrl || teacher.courseUrl,
-          teachStyle: teachStyle || teacher.teachStyle,
+          teachStyle: teachStyle || teacher.teachStyle
         })
       })
       .then(updatedTeacher => {
