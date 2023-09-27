@@ -1,9 +1,9 @@
 require('dotenv').config({ path: './environment/dev/.env' })
-
-const express = require('express')
-
-const app = express()
 const port = process.env.PORT
+const express = require('express')
+const app = express()
+const cors = require('cors')
+app.use(cors())
 
 const apis = require('./src/routes/index')
 

@@ -157,9 +157,10 @@ const userService = {
   },
   putUser: async (req, next) => {
     const { email, name, introduction, password, confirmPassword } = req.body
-    if (!email && !name && !introduction && !password && !confirmPassword) return next(new Error('未進行任何修改'))
-    if (password !== confirmPassword) return next(new Error('密碼不一致'))
     const avatar = req.file ? await localFileHandler(req.file) : null
+    if (!email && !name && !introduction && !password && !confirmPassword && !avatar) return next(new Error('未進行任何修改'))
+    if (password !== confirmPassword) return next(new Error('密碼不一致'))
+
     let hash
     if (password) hash = await bcrypt.hash(password, 10)
     return User.findByPk(req.params.id, {
