@@ -219,6 +219,7 @@ const teacherService = {
   },
   putTeacher: async (req, next) => {
     const { courseIntroduce, courseUrl, teachStyle } = req.body
+    if (!courseIntroduce && !courseUrl && !teachStyle) return next(new Error('沒有修改的資訊'))
     return Teacher.findByPk(req.params.id)
       .then(teacher => {
         if (!teacher) throw new Error('找不到此教師')

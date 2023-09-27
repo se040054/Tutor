@@ -156,21 +156,27 @@ const userService = {
       }).catch(err => next(err))
   },
   putUser: async (req, next) => {
-    const { name, introduction } = req.body
-    const { file } = req
-    const avatar = await localFileHandler(file)
+    const { email, name, introduction, password, confirmPassword } = req.body
+    if (!email && !name && !introduction && !password && !confirmPassword) return next(new Error('未進行任何修改'))
+    if (password !== confirmPassword) return next(new Error('密碼不一致'))
+    const avatar = req.file ? await localFileHandler(req.file) : null
+    let hash
+    if (password) hash = await bcrypt.hash(password, 10)
     return User.findByPk(req.params.id, {
-      attributes: { exclude: ['password'] }
     })
       .then(user => {
         if (!user) throw new Error('查無用戶')
         if (user.id !== req.user.id) throw new Error('僅能修改自己的資訊')
         return user.update({
-          name,
-          introduction,
+          email: email || user.email,
+          name: name || user.name,
+          introduction: introduction || user.introduction,
+          password: hash || user.password,
           avatar: avatar || user.avatar
         })
       }).then(updatedUser => {
+        updatedUser = updatedUser.toJSON()
+        delete updatedUser.password
         return next(null, {
           status: 'success',
           user: updatedUser
