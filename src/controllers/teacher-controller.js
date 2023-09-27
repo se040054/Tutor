@@ -30,12 +30,6 @@ const teacherController = {
       else return res.json({ data })
     })
   },
-  getMyLessons: (req, res) => {
-    teacherServices.getMyLessons(req, (err, data) => {
-      if (err) return res.status(400).json({ status: 'error', message: err.message })
-      else return res.json({ data })
-    })
-  },
   deleteLesson: (req, res) => {
     teacherServices.deleteLesson(req, (err, data) => {
       if (err) return res.status(400).json({ status: 'error', message: err.message })
