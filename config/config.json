@@ -22,9 +22,16 @@
   },
   "production": {
     "username": "root",
-    "password": null,
-    "database": "database_production",
+    "password": "1234",
+    "database": "tutor",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "migrationsPath": "/src/db/migrations",
+    "timezone": "+08:00",
+    "dialectOptions": {
+      "options": {
+        "useUTC": false
+      }
+    }
   }
 }
