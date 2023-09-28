@@ -36,12 +36,27 @@ Rename the 'example.env' file located in '/environment/prod/' directory to '.env
 ```
 
 7.
+MySQL:
+```
+CREATE DATABESE tutor
+```
+Set the 'config.json' file for connecting to the MySQL server.
+
+```
+npm run migrate 
+npm run seed
+```
+just wait for minutes
+
+8. 
+
 ```
 npm run start
 ```
-If you see http://localhost:3000 in the command prompt, it means it was successful. 
+If you see http://localhost:3000 in the command prompt, it means it was successful.
+ 
 
-8.
+---
 
 #### After following the steps above , this application needs to be excuted within this : 
 https://github.com/se040054/Tutor-Frontend
