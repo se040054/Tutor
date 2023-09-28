@@ -39,7 +39,7 @@ Rename the 'example.env' file located in '/environment/prod/' directory to '.env
 ```
 npm run start
 ```
-If you see http://localhost:3001 in the command prompt, it means it was successful. 
+If you see http://localhost:3000 in the command prompt, it means it was successful. 
 
 8.
 
