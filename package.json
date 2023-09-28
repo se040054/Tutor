@@ -9,6 +9,7 @@
     "dev": "set NODE_ENV=development&&nodemon app.js",
     "migrate": "npx sequelize db:migrate",
     "migrate:undo": "npx sequelize db:migrate:undo",
+    "migrate:undo:all": "npx sequelize db:migrate:undo:all",
     "seed": "npx sequelize db:seed:all",
     "seed:undo": "npx sequelize db:seed:undo",
     "seed:undo:all": "npx sequelize-cli db:seed:undo:all"
