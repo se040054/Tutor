@@ -30,12 +30,12 @@ module.exports = {
       const lessonIdNum = Array.from({ length: 60 }, (_, i) => i + 1).filter(i => i % 6 !== 0 && i % 6 !== 5)
       const reserveArray = Array.from({ length: 40 }, (_, i) => ({
         lesson_id: lessonIdNum[i],
-        user_id: Math.floor(i / 8) + 2,
+        user_id: Math.floor(i / 4) + 2,
         created_at: new Date(),
         updated_at: new Date()
       }))
       const reserveIdNum = Array.from({ length: 40 }, (_, i) => i + 1)
-        .filter(i => i % 6 !== 3 && i % 6 !== 4)
+        .filter(i => i % 4 !== 3 && i % 4 !== 0)
       const ratingArray = Array.from({ length: 20 }, (_, i) => ({
         score: Math.ceil(Math.random() * 40) / 10 + 1,
         text: faker.lorem.sentence(),
