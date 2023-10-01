@@ -35,7 +35,7 @@ const teacherService = {
           if (startTime.isSameOrBefore(createdLessonEnd) &&
             endTime.isSameOrAfter(createdLessonStart)) {
             //  console.log('有重複的錯誤偵測')
-            throw new Error('課程時間重複')
+            return next(new Error('課程時間重複'))
           }
           // console.log(`比對結果 :新課時間${createdLessonStart}~${createdLessonEnd}`)
           // console.log(`比對結果 :舊課時間${startTime}~${endTime}`)

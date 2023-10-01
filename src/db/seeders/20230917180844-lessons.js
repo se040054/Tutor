@@ -4,16 +4,17 @@
 // 兩堂 昨天 已預約 未評分 2 3
 // 兩堂 明天的課 未預約 未評分 4 5
 const moment = require('moment')
+require('moment-timezone').tz.setDefault('Asia/Taipei')
 const { faker } = require('@faker-js/faker')
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const Before2Days = moment().subtract(2, 'days').toDate()
-    const Before3Days = moment().subtract(3, 'days').toDate()
-    const Before4Days = moment().subtract(4, 'days').toDate()
-    const Before5Days = moment().subtract(5, 'days').toDate()
-    const After10Days = moment().add(10, 'days').toDate()
-    const After11Days = moment().add(11, 'days').toDate()
+    const Before2Days = moment({ hour: 19 }).subtract(2, 'days').toDate()
+    const Before3Days = moment({ hour: 19 }).subtract(3, 'days').toDate()
+    const Before4Days = moment({ hour: 19 }).subtract(4, 'days').toDate()
+    const Before5Days = moment({ hour: 19 }).subtract(5, 'days').toDate()
+    const After10Days = moment({ hour: 19 }).add(10, 'days').toDate()
+    const After11Days = moment({ hour: 19 }).add(11, 'days').toDate()
     const days = [Before2Days, Before3Days, Before4Days, Before5Days, After10Days, After11Days]
     let transaction
     try {

@@ -1,6 +1,7 @@
 const { User, Teacher, Lesson, Reserve, Rating, sequelize } = require('../db/models')
 const bcrypt = require('bcryptjs')
 const moment = require('moment')
+require('moment-timezone').tz.setDefault('Asia/Taipei')
 const jwt = require('jsonwebtoken')
 const { localFileHandler } = require('../helpers/file-helper')
 
