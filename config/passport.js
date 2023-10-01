@@ -40,6 +40,7 @@ passport.use(new LocalStrategy(
       })
       .catch(err => cb(err))
   }
+
 ))
 
 module.exports = passport

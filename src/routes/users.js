@@ -6,7 +6,12 @@ const { authenticated } = require('../middleware/api-auth')
 const upload = require('../middleware/multer')
 
 router.post('/users/register', userController.register)
-router.post('/users/login', passport.authenticate('local', { session: false }), userController.login)
+
+router.post('/users/login', (req, res, next) => {
+  if (!req.body.email || !req.body.password) throw new Error('請填寫密碼及信箱')
+  passport.authenticate('local', { session: false })(req, res, next)
+}, userController.login) // 驗證登入要在中間件之前 否則無法客製訊息及驗證表單
+
 router.post('/users/googleLogin', userController.googleLogin)
 router.post('/users/applyTeacher', authenticated, userController.applyTeacher)
 router.get('/users/topLearningUsers', authenticated, userController.getTopLearningUsers)
